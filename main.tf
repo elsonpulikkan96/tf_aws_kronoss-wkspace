@@ -1,4 +1,4 @@
-# main.tf
+### main.tf ###
 provider "aws" {
   region = var.region
 }
@@ -9,13 +9,51 @@ locals {
   name     = "ex-${basename(path.cwd)}"
   vpc_cidr = var.vpc_cidr
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
-
   tags = {
     Project = local.name
     Owner   = "Terraform"
   }
 }
 
+# IAM Role for VPC Flow Logs
+resource "aws_iam_role" "vpc_flow_logs_role" {
+  name = "vpc-flow-logs-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "vpc-flow-logs.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_policy" "vpc_flow_logs_policy" {
+  name        = "vpc-flow-logs-policy"
+  description = "Allows VPC Flow Logs to publish to CloudWatch"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
+      Effect   = "Allow"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "vpc_flow_logs_attachment" {
+  policy_arn = aws_iam_policy.vpc_flow_logs_policy.arn
+  role       = aws_iam_role.vpc_flow_logs_role.name
+}
+
+# CloudWatch Log Group for VPC Flow Logs
+resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+  name              = "/aws/vpc-flow-logs"
+  retention_in_days = 30
+}
+
+# VPC Module
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.19.0"
@@ -30,22 +68,19 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_flow_log      = true
 
+  flow_log_destination_arn         = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  flow_log_cloudwatch_iam_role_arn = aws_iam_role.vpc_flow_logs_role.arn
+
   tags = local.tags
 }
 
+# Transit Gateway
 resource "aws_ec2_transit_gateway" "this" {
   description = "Transit Gateway for VPC ${module.vpc.vpc_id}"
   tags        = merge(local.tags, { Name = "${local.name}-TGW" })
 }
 
-resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
-  vpc_id             = module.vpc.vpc_id
-  transit_gateway_id = aws_ec2_transit_gateway.this.id
-  subnet_ids         = module.vpc.private_subnets
-
-  tags = merge(local.tags, { Name = "${local.name}-TGW-Attachment" })
-}
-
+# Security Group
 resource "aws_security_group" "windows_workspace" {
   name        = "${local.name}-win-ws-sg"
   description = "Security group for Windows Workspace allowing RDP and SMB."
@@ -68,7 +103,6 @@ resource "aws_security_group" "windows_workspace" {
   }
 
   egress {
-    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
