@@ -25,7 +25,8 @@ Files Structure
 ├── tf_bash.sh         # Bash script (if required for automation)
 ├── terraform.tfvars   # Variable definitions (moved from variables.tf)
 ├── versions.tf        # Specifies Terraform and provider version constraints
-```sh
+```
+
 Prerequisites
 
 Before running Terraform, ensure you have:
@@ -41,26 +42,26 @@ Usage
 Initialize Terraform
 ```sh
 terraform init
-```sh
+```
 Plan Infrastructure Changes
 ```sh
 terraform plan
-```sh
+```
 Apply Changes to AWS
 ```sh
 terraform apply -auto-approve
-```sh
+```
 Destroy Infrastructure
 ```sh
 terraform destroy -auto-approve
-```sh
+```
 Variables
 
 All variables are stored in terraform.tfvars. Example:
 ```sh
 region = "eu-west-1"
 vpc_cidr = "10.0.0.0/16"
-```sh
+```
 Outputs
 Once deployed, Terraform provides the following outputs:
 ```sh
@@ -93,7 +94,7 @@ output "windows_workspace_sg_id" {
   description = "The ID of the Windows Workspace Security Group"
   value       = aws_security_group.windows_workspace.id
 }
-```sh
+```
 Notes
 
 Ensure IAM permissions allow creating VPCs, Security Groups, and Transit Gateways.
