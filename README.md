@@ -1,5 +1,5 @@
-# tf_aws_kronoss-wkspace
 tf_aws_kronoss-wkspace
+
 Terraform AWS Kronoss Workspace
 
 Overview
@@ -17,7 +17,7 @@ Security Groups for Windows Workspace with predefined ingress and egress rules.
 Remote Backend Storage using Amazon S3 for state management.
 
 Files Structure
-
+```sh
 /root/tf_aws_kronoss-wkspace/
 ├── backend.tf         # Configures S3 backend for storing Terraform state
 ├── main.tf            # Defines AWS infrastructure resources
@@ -25,7 +25,7 @@ Files Structure
 ├── tf_bash.sh         # Bash script (if required for automation)
 ├── terraform.tfvars   # Variable definitions (moved from variables.tf)
 ├── versions.tf        # Specifies Terraform and provider version constraints
-
+```sh
 Prerequisites
 
 Before running Terraform, ensure you have:
@@ -39,32 +39,31 @@ An S3 bucket (tf-state-945a3051) and DynamoDB (if using state locking) set up fo
 Usage
 
 Initialize Terraform
-
+```sh
 terraform init
-
+```sh
 Plan Infrastructure Changes
-
+```sh
 terraform plan
-
+```sh
 Apply Changes to AWS
-
+```sh
 terraform apply -auto-approve
-
+```sh
 Destroy Infrastructure
-
+```sh
 terraform destroy -auto-approve
-
+```sh
 Variables
 
 All variables are stored in terraform.tfvars. Example:
-
+```sh
 region = "eu-west-1"
 vpc_cidr = "10.0.0.0/16"
-
+```sh
 Outputs
-
 Once deployed, Terraform provides the following outputs:
-
+```sh
 output "vpc_id" {
   description = "The ID of the VPC"
   value       = module.vpc.vpc_id
@@ -94,7 +93,7 @@ output "windows_workspace_sg_id" {
   description = "The ID of the Windows Workspace Security Group"
   value       = aws_security_group.windows_workspace.id
 }
-
+```sh
 Notes
 
 Ensure IAM permissions allow creating VPCs, Security Groups, and Transit Gateways.
