@@ -1,5 +1,3 @@
-tf_aws_kronoss-wkspace
-
 Terraform AWS Kronoss Workspace
 
 Overview
