@@ -2,11 +2,11 @@ Terraform AWS Kronoss Workspace | tf_aws_kronoss-wkspace
 
 Overview
 
-This Terraform configuration sets up an AWS environment with the following components:
+This Terraform setup configures an AWS environment with these components:
 
-A VPC with public and private subnets using the terraform-aws-modules/vpc/aws module.
+A VPC with public and private subnets using the official terraform-aws-modules/vpc/aws module.
 
-VPC Flow Logs enabled for better network monitoring.
+VPC Flow Logs enabled better network monitoring.
 
 A Transit Gateway for interconnecting VPCs.
 
@@ -20,24 +20,22 @@ Files Structure
 ├── backend.tf         # Configures S3 backend for storing Terraform state
 ├── main.tf            # Defines AWS infrastructure resources
 ├── outputs.tf         # Outputs values for Terraform resources
-├── tf_bash.sh         # Bash script (if required for automation)
-├── terraform.tfvars   # Variable definitions (moved from variables.tf)
+├── bootstrap.sh       # Bash script for bootstrap process
+├── terraform.tfvars   # Variable definitions
 ├── versions.tf        # Specifies Terraform and provider version constraints
 ```
 
 Prerequisites
 
-Before running Terraform, ensure you have:
+Before running Terraform, make sure you have:
 
-AWS credentials configured (~/.aws/credentials or environment variables)
+Configured AWS credentials (~/.aws/credentials or environment variables)
 
 Terraform v1.0+ installed
 
-An S3 bucket (tf-state-945a3051) and DynamoDB (if using state locking) set up for remote backend
+An S3 bucket (tf-state-*****) and DynamoDB (for state locking) were set up for the remote backend by running the bootstrap.sh script
 
-Usage
-
-
+Steps to Run: 
 
 Clone Git Repo
 ```sh
@@ -95,12 +93,10 @@ output "windows_workspace_sg_id" {
   value       = aws_security_group.windows_workspace.id
 }
 ```
-Notes
+Notes:
+Verify IAM permissions for creating VPCs, Security Groups, and Transit Gateways.
 
-Ensure IAM permissions allow creating VPCs, Security Groups, and Transit Gateways.
+Modify security group rules to limit access as required.
 
-Adjust security group rules to restrict access as needed.
-
-License
-
-This project is licensed under the MIT License.
+License:
+This project is under the MIT License.
