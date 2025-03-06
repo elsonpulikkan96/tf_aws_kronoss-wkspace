@@ -1,6 +1,6 @@
-Terraform AWS Kronoss Workspace | tf_aws_kronoss-wkspace
+Terraform AWS Kronoss Workspace Project
 
-Overview
+Overview:
 
 This Terraform setup configures an AWS environment with these components:
 
@@ -56,43 +56,9 @@ terraform destroy -auto-approve
 Variables
 
 All variables are stored in terraform.tfvars. Example:
-```sh
-region = "eu-west-1"
-vpc_cidr = "10.0.0.0/16"
-```
-Outputs
-Once deployed, Terraform provides the following outputs:
-```sh
-output "vpc_id" {
-  description = "The ID of the VPC"
-  value       = module.vpc.vpc_id
-}
 
-output "vpc_cidr_block" {
-  description = "The CIDR block of the VPC"
-  value       = module.vpc.vpc_cidr_block
-}
+Outputs will displacyed with neccessary information after deployment.
 
-output "private_subnets" {
-  description = "List of private subnet IDs"
-  value       = module.vpc.private_subnets
-}
-
-output "public_subnets" {
-  description = "List of public subnet IDs"
-  value       = module.vpc.public_subnets
-}
-
-output "transit_gateway_id" {
-  description = "The ID of the Transit Gateway"
-  value       = aws_ec2_transit_gateway.this.id
-}
-
-output "windows_workspace_sg_id" {
-  description = "The ID of the Windows Workspace Security Group"
-  value       = aws_security_group.windows_workspace.id
-}
-```
 Notes:
 Verify IAM permissions for creating VPCs, Security Groups, and Transit Gateways.
 
