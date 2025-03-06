@@ -1,4 +1,4 @@
-### variables.tf ###
+# variables.tf
 variable "region" {
   description = "AWS region for deployment"
   type        = string
@@ -9,7 +9,7 @@ variable "vpc_cidr" {
   type        = string
 }
 
-variable "dynamodb_table_name" {
-  description = "DynamoDB table name for Terraform state locking"
+variable "project_name" {
+  description = "The name of the project, used for resource naming"
   type        = string
 }

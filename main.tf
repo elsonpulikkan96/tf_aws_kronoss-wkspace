@@ -15,7 +15,6 @@ locals {
   }
 }
 
-# ✅ VPC Module
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "5.19.0"
@@ -28,12 +27,11 @@ module "vpc" {
 
   enable_dns_support   = true
   enable_dns_hostnames = true
-  enable_flow_log      = false  # Disabled here, manually defined below.
+  enable_flow_log      = false # Disabled for manual configuration
 
   tags = local.tags
 }
 
-# ✅ Transit Gateway
 resource "aws_ec2_transit_gateway" "this" {
   description = "Transit Gateway for VPC ${module.vpc.vpc_id}"
   tags        = merge(local.tags, { Name = "${local.name}-TGW" })
@@ -47,7 +45,6 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
   tags = merge(local.tags, { Name = "${local.name}-TGW-Attachment" })
 }
 
-# ✅ IAM Role for VPC Flow Logs (Required for CloudWatch)
 resource "aws_iam_role" "vpc_flow_logs_role" {
   name = "vpc-flow-logs-role"
 
@@ -79,19 +76,27 @@ resource "aws_iam_role_policy_attachment" "vpc_flow_logs_attachment" {
   role       = aws_iam_role.vpc_flow_logs_role.name
 }
 
-# ✅ CloudWatch Log Group for VPC Flow Logs
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
-  name              = "/aws/vpc-flow-logs"
+  name              = "/aws/vpc-flow-logs-${local.name}"
   retention_in_days = 30
 }
 
-# ✅ S3 Bucket for VPC Flow Logs (No ACL Required)
+resource "aws_flow_log" "vpc_logs" {
+  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
+  log_destination_type = "cloud-watch-logs"
+  traffic_type         = "ALL"
+  vpc_id               = module.vpc.vpc_id
+  iam_role_arn         = aws_iam_role.vpc_flow_logs_role.arn
+  depends_on           = [aws_iam_role_policy_attachment.vpc_flow_logs_attachment]
+}
+
 resource "random_id" "s3_suffix" {
   byte_length = 4
 }
 
 resource "aws_s3_bucket" "vpc_flow_logs" {
-  bucket = "vpc-flow-logs-${replace(local.name, "_", "-")}-${random_id.s3_suffix.hex}"
+  bucket        = "vpc-flow-logs-${replace(local.name, "_", "-")}-${random_id.s3_suffix.hex}"
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_policy" "vpc_flow_logs_policy" {
@@ -105,16 +110,6 @@ resource "aws_s3_bucket_policy" "vpc_flow_logs_policy" {
       Resource  = "${aws_s3_bucket.vpc_flow_logs.arn}/*"
     }]
   })
-}
-
-# ✅ Attach Flow Logs to VPC (CloudWatch) [Fix Applied]
-resource "aws_flow_log" "vpc_logs" {
-  log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
-  log_destination_type = "cloud-watch-logs"
-  traffic_type         = "ALL"
-  vpc_id               = module.vpc.vpc_id
-  iam_role_arn         = aws_iam_role.vpc_flow_logs_role.arn  # ✅ FIXED: Required for CloudWatch
-  depends_on           = [aws_iam_role_policy_attachment.vpc_flow_logs_attachment]  # Ensures IAM role is created first
 }
 
 resource "aws_flow_log" "vpc_logs_s3" {
@@ -154,4 +149,3 @@ resource "aws_security_group" "windows_workspace" {
 
   tags = merge(local.tags, { Name = "${local.name}-WindowsWorkspaceSG" })
 }
-

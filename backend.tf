@@ -1,10 +1,9 @@
-### backend.tf ###
 terraform {
   backend "s3" {
-    bucket         = "tf-state-945a30510"
-    key            = "terraform.tfstate"
+    bucket         = "tf-state-tfawskronoss-wkspace-1ff1a911"
+    key            = "tfawskronoss-wkspace/terraform.tfstate"
     region         = "eu-west-1"
     encrypt        = true
-    dynamodb_table = "terraform-lock-tf-kronos-wkp-dr" # This will be replaced dynamically by bootstrap.sh
+    dynamodb_table = "terraform-lock-tfawskronoss-wkspace-1ff1a911"
   }
 }
