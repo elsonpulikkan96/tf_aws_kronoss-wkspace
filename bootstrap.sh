@@ -1,12 +1,10 @@
 #!/bin/bash
 set -e
-
 AWS_REGION="eu-west-1"  # Change this to your required region
 PROJECT_NAME=$(basename "$(pwd)" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-')
 RANDOM_SUFFIX=$(openssl rand -hex 4)
 BUCKET_NAME="tf-state-${PROJECT_NAME}-${RANDOM_SUFFIX}"
 TABLE_NAME="terraform-lock-${PROJECT_NAME}-${RANDOM_SUFFIX}"
-
 BUCKET_NAME=$(echo "$BUCKET_NAME" | cut -c1-63)
 
 BACKEND_FILE="backend.tf"
@@ -33,7 +31,6 @@ if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
     aws s3api put-bucket-versioning --bucket "$BUCKET_NAME" \
         --versioning-configuration Status=Enabled
 fi
-
 echo "Waiting for S3 bucket to be fully available..."
 for i in {1..10}; do
     if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
@@ -43,7 +40,6 @@ for i in {1..10}; do
     echo "Retrying S3 bucket check... ($i/10)"
     sleep 5
 done
-
 if ! aws dynamodb describe-table --table-name "$TABLE_NAME" --region "$AWS_REGION" &>/dev/null; then
     echo "Creating DynamoDB table: $TABLE_NAME"
     for i in {1..5}; do
@@ -56,7 +52,6 @@ if ! aws dynamodb describe-table --table-name "$TABLE_NAME" --region "$AWS_REGIO
     done
     aws dynamodb wait table-exists --table-name "$TABLE_NAME" --region "$AWS_REGION"
 fi
-
 echo "Updating backend.tf with the correct values..."
 TMP_FILE=$(mktemp)
 awk -v bucket="$BUCKET_NAME" \
@@ -74,7 +69,6 @@ if grep -q "BUCKET_PLACEHOLDER\\|DYNAMODB_PLACEHOLDER\\|PROJECT_PLACEHOLDER\\|RE
     cat "$BACKEND_FILE"
     exit 1
 fi
-
 echo "Updated backend.tf content:"
 cat "$BACKEND_FILE"
 sudo printf "\n"
