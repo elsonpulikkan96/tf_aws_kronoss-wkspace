@@ -1,4 +1,4 @@
-Terraform AWS Kronoss Workspace Project
+Terraform AWS Workspace Project
 
 Overview:
 
@@ -16,22 +16,21 @@ Remote Backend Storage using Amazon S3 for state management.
 
 Files Structure
 ```sh
-/root/tf_aws_kronoss-wkspace/
+/tf_aws_kronoss-wkspace/
 ├── backend.tf         # Configures S3 backend for storing Terraform state
 ├── main.tf            # Defines AWS infrastructure resources
 ├── outputs.tf         # Outputs values for Terraform resources
 ├── bootstrap.sh       # Bash script for bootstrap process
-├── terraform.tfvars   # Variable definitions
+├── terraform.tfvars   # Global Variable definitions
+├── variables.tf       # Module Variable definitions
 ├── versions.tf        # Specifies Terraform and provider version constraints
 ```
 
-Prerequisites
+Prerequisites:
 
 Before running Terraform, make sure you have:
 
-Configured AWS credentials (~/.aws/credentials or environment variables)
-
-Terraform v1.0+ installed
+Configured AWS CLI with credentials and Terraform v1.0+ installed
 
 An S3 bucket (tf-state-*****) and DynamoDB (for state locking) were set up for the remote backend by running the bootstrap.sh script
 
