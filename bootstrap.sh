@@ -7,10 +7,8 @@ RANDOM_SUFFIX=$(openssl rand -hex 4)
 BUCKET_NAME="tf-state-${PROJECT_NAME}-${RANDOM_SUFFIX}"
 TABLE_NAME="terraform-lock-${PROJECT_NAME}-${RANDOM_SUFFIX}"
 
-# Ensure max bucket name length is 63 characters
 BUCKET_NAME=$(echo "$BUCKET_NAME" | cut -c1-63)
 
-# --- Step 1: Force Reset backend.tf to Placeholder Values ---
 BACKEND_FILE="backend.tf"
 cat <<EOF > "$BACKEND_FILE"
 terraform {
@@ -24,7 +22,6 @@ terraform {
 }
 EOF
 
-# --- Step 2: Create S3 Bucket with Retry Logic ---
 if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
     echo "Creating S3 bucket: $BUCKET_NAME"
     if [ "$AWS_REGION" == "us-east-1" ]; then
@@ -37,7 +34,6 @@ if ! aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
         --versioning-configuration Status=Enabled
 fi
 
-# --- Step 3: Wait for S3 Bucket to Become Available ---
 echo "Waiting for S3 bucket to be fully available..."
 for i in {1..10}; do
     if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
@@ -48,7 +44,6 @@ for i in {1..10}; do
     sleep 5
 done
 
-# --- Step 4: Create DynamoDB Table with Retry Logic ---
 if ! aws dynamodb describe-table --table-name "$TABLE_NAME" --region "$AWS_REGION" &>/dev/null; then
     echo "Creating DynamoDB table: $TABLE_NAME"
     for i in {1..5}; do
@@ -62,7 +57,6 @@ if ! aws dynamodb describe-table --table-name "$TABLE_NAME" --region "$AWS_REGIO
     aws dynamodb wait table-exists --table-name "$TABLE_NAME" --region "$AWS_REGION"
 fi
 
-# --- Step 5: Replace Placeholders in backend.tf ---
 echo "Updating backend.tf with the correct values..."
 TMP_FILE=$(mktemp)
 awk -v bucket="$BUCKET_NAME" \
@@ -75,20 +69,20 @@ awk -v bucket="$BUCKET_NAME" \
       gsub("REGION_PLACEHOLDER", region);
       print}' "$BACKEND_FILE" > "$TMP_FILE" && mv "$TMP_FILE" "$BACKEND_FILE"
 
-# --- Step 6: Validate Placeholder Replacement ---
 if grep -q "BUCKET_PLACEHOLDER\\|DYNAMODB_PLACEHOLDER\\|PROJECT_PLACEHOLDER\\|REGION_PLACEHOLDER" "$BACKEND_FILE"; then
     echo "Error: Placeholders in backend.tf were not replaced correctly!"
     cat "$BACKEND_FILE"
     exit 1
 fi
 
-# Debugging: Show Final backend.tf Content
 echo "Updated backend.tf content:"
 cat "$BACKEND_FILE"
 sudo printf "\n"
-# --- Step 7: Initialize Terraform Backend ---
+
 terraform init --reconfigure
 sudo printf "\n"
 echo "Succefully Intiated Terraform"
 sudo printf "\n"
-echo "Now launch infra using : terraform apply --auto-approve:"
+echo "Now launch this Infra using : terraform apply --auto-approve"
+sudo printf "\n"
+echo "Later Destroy this deployed Infra using : terraform destroy --auto-approve"
